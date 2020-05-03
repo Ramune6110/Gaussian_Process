@@ -36,31 +36,64 @@ beta_f  = 0.400;
 lamda_f = 4.126;
 for i = 1:N
     for j = 1:N
-        k = alpha_f^2 * exp((-1 / 2)) * beta_f * (X_t(j, 1) -  X_t(i));
+        k = alpha_f^2 * exp((-1 / 2) * beta_f * (X_t(j, 1) -  X_t(i))^2);
         result.temp = [result.temp; k];
     end
     result.K = vertcat(result.K, result.temp');
     result.temp = [];
 end
-% •½‹Ï
-m = result.K(1,:) / (result.K + lamda_f * eye(N, N)) * result.X_t_1;
-% •ªU
-sigma = alpha_f^2 - result.K(1,:) / (result.K + lamda_f * eye(N, N)) * (result.K(1,:))';
+% % •½‹Ï
+% m = result.K(1,:) / (result.K + lamda_f * eye(N, N)) * result.X_t_1;
+% % •ªU
+% sigma = alpha_f^2 - result.K(1,:) / (result.K + lamda_f * eye(N, N)) * (result.K(1,:))';
+
+
+result.Temp = [];
+result.m = [];
+result.sigma = [];
+result.Upper = [];
+result.Lower = [];
 tic;% start@for•¶‰ñ‚éŠÔ‚ÌŒv‘ª
 for i = 1:nsteps
     time = time + dt;
+    % ŠÖ”’l‚ÌŒvZ
     x = 0.2 * x + ((25 * x) / (1 + x^2)) + 8 * cos(1.2 * x) +  sqrt(w) * randn(1, 1);
     y = sin(x / 10) + sqrt(v) * randn(1, 1);
+    % k*(x_t)‚ÌŒvZ
+    for j = 1:N
+        k = alpha_f^2 * exp((-1 / 2) * beta_f * (X_t(j, 1) -  x)^2);
+        result.Temp = [result.Temp; k];
+    end
+    % •½‹Ï
+    m =  (result.Temp)' / (result.K + lamda_f * eye(N, N)) * result.X_t_1;
+    % •ªU
+    sigma = alpha_f^2 - (result.Temp)' / (result.K + lamda_f * eye(N, N)) * result.Temp;
+    Upper = m + 3 * sqrt(sigma);
+    Lower = m - 3 * sqrt(sigma);
+
     result.x = [result.x; x];
     result.y = [result.y; y];
     result.time = [result.time; time];
+    result.Temp = [];
+    result.m = [result.m; m];
+    result.sigma = [result.sigma; sigma];
+    result.Upper = [result.Upper; Upper];
+    result.Lower = [result.Lower; Lower];
 end
 toc;% end
 Drow(result);
 
 function [] = Drow(result)
     figure(1);
-    plot(result.time, result.x, 'k');
+    for i=2:50
+    re(i-1)=result.x(i,1);
+    end
+    re(50)=1;
+    plot(result.time, re, 'k'); hold on;
+    plot(result.time, result.Upper, 'r');hold on;
+    plot(result.time, result.m, 'g'); hold on;
+    plot(result.time, result.Lower, 'b');hold on;
     figure(2);
     plot(result.time, result.y, 'k');
+    
 end
