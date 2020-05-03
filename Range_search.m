@@ -12,14 +12,28 @@ xEst  = 10;
 PEst  = 1;
 w     = 0.5^2;
 v     = 0.05^2;
-theta = 0.5;
+theta = 0.01;
 %% ハイパーパラメータの値
-alpha_f = 1.937;
-beta_f  = 0.400;
-lamda_f = 4.126;
-alpha_h = 0.999;
-beta_h  = 0.002;
-lamda_h = 0.198;
+% alpha_f = 1.937;
+% beta_f  = 0.400;
+% lamda_f = 4.126;
+% alpha_h = 0.999;
+% beta_h  = 0.002;
+% lamda_h = 0.198;
+
+% alpha_f = 4.7023 * 10^7;
+% beta_f  = 4.2;
+% lamda_f = 9.63 * 10^3;
+% alpha_h = 895;
+% beta_h  = 0.2;
+% lamda_h = 8.02 * 10^3;
+
+alpha_f = 2.8989 * 10^7;
+beta_f  = 4.2002;
+lamda_f = 1.8627 * 10^4;
+alpha_h = 138.3217;
+beta_h  = 0.2;
+lamda_h = 9.2576 * 10^3;
 %% データセット取得範囲及び個数
 a = -20;
 b = 20;
@@ -77,8 +91,8 @@ end
 m = result.K(1,:) / (result.K + lamda_f * eye(N, N)) * result.X_t_1;
 % 分散
 sigma = alpha_f^2 - result.K(1,:) / (result.K + lamda_f * eye(N, N)) * (result.K(1,:))';
-Upper = m + 3 * sqrt(sigma);
-Lower = m - 3 * sqrt(sigma);
+Upper = m + sqrt(sigma);
+Lower = m - sqrt(sigma);
 %% データセットから推定した関数の平均と分散を初期値として配列に格納
 result.m      = [result.m; m];
 result.m_xEst = [result.m_xEst; m];
@@ -148,8 +162,12 @@ for i = 1:nsteps
         result.Temp_xEst_last = [result.Temp_xEst_last; k];
     end
     % ヤコビアンmfにxPredを入れた値を計算
-    m_F     = (result.Temp_xEst_last)' / (result.K + lamda_f * eye(N, N)) * result.X_t_1; % 式(10)
-    PEst  = m_F^2 / (PPred + m_H^2 / v + theta) + w; % 式(19)
+    m_F  = (result.Temp_xEst_last)' / (result.K + lamda_f * eye(N, N)) * result.X_t_1; % 式(10)
+    PEst = m_F^2 / (PPred + m_H^2 / v + theta) + w; % 式(19)
+    % thetaの条件式
+    if PPred + m_H^2 / v + theta <= 0
+        break;
+    end
     %% 配列に結果を格納
     result.x     = [result.x; x];
     result.y     = [result.y; y];

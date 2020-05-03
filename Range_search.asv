@@ -12,14 +12,21 @@ xEst  = 10;
 PEst  = 1;
 w     = 0.5^2;
 v     = 0.05^2;
-theta = 0.5;
+theta = 0;
 %% ハイパーパラメータの値
-alpha_f = 1.937;
-beta_f  = 0.400;
-lamda_f = 4.126;
-alpha_h = 0.999;
-beta_h  = 0.002;
-lamda_h = 0.198;
+% alpha_f = 1.937;
+% beta_f  = 0.400;
+% lamda_f = 4.126;
+% alpha_h = 0.999;
+% beta_h  = 0.002;
+% lamda_h = 0.198;
+
+% alpha_f = 4.7023 * 10^7;
+% beta_f  = 4.2;
+% lamda_f = 9.63 * 10^3;
+% alpha_h = 895;
+% beta_h  = 0.2;
+% lamda_h = 8.02 * 10^3;
 %% データセット取得範囲及び個数
 a = -20;
 b = 20;
@@ -174,9 +181,9 @@ Drow(result);
 function [] = Drow(result)
     figure(1);
     plot(result.time, result.x, 'k'); hold on;
-    plot(result.time, result.Upper, 'r');hold on;
+    %plot(result.time, result.Upper, 'r');hold on;
     plot(result.time, result.m, 'g'); hold on;
-    plot(result.time, result.Lower, 'b');hold on;
+    %plot(result.time, result.Lower, 'b');hold on;
     figure(2);
     plot(result.time, result.x, 'k'); hold on;
     plot(result.time, result.xEst, 'r');hold on;
