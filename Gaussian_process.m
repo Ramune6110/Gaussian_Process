@@ -76,14 +76,12 @@ result.Upper  = [result.Upper; Upper];
 result.Lower  = [result.Lower; Lower];
 %% main loop
 tic;% start　
-k_star = zeros(N, 1);
+
 for i = 1:nsteps
     time = time + dt;
     %% ガウス過程回帰による関数fの推定
     % k*(x_t)の計算 式(4)
-    for j = 1:N
-        k_star(j, 1) = alpha_f^2 * exp((-1 / 2) * beta_f * (X_t(j, 1) -  x)^2);
-    end
+    k_star = Calc_k_star(N, alpha_f, beta_f, X_t, x);
     % 平均 式(8)
     m =  (k_star)' / (K + lamda_f * eye(N, N)) * X_t_1;
     % 分散 式(8)
@@ -106,6 +104,13 @@ end
 toc;
 
 Drow(result);
+
+function k_star = Calc_k_star(N, alpha_f, beta_f, X_t, x)
+k_star = zeros(N, 1);
+    for j = 1:N
+        k_star(j, 1) = alpha_f^2 * exp((-1 / 2) * beta_f * (X_t(j, 1) -  x)^2);
+    end
+end
 
 function [] = Drow(result)
     figure(1);
