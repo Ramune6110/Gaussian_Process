@@ -8,8 +8,6 @@ endtime = 50.0;
 nsteps  = ceil((endtime - time) / dt);
 %% ó‘Ô‚Ì‰Šú’l
 x     = 10;
-xEst  = 10;
-PEst  = 1;
 w     = 0.5^2;
 v     = 0.05^2;
 theta = 0.05;
@@ -28,15 +26,11 @@ N = 500;
 result.x    = [];
 result.y    = [];
 result.time = [];
-result.xEst = [];
-result.PEst = [];
-% ‰Šú’lİ’è
+%% ‰Šú’lİ’è
 result.x     = [result.x; x];
 result.time  = [result.time; time];
-result.xEst  = [result.xEst; xEst];
-result.PEst  = [result.PEst; PEst];
 %% ŠÖ”‚Ì•½‹Ï’l‚ğŠi”[
-result.m      = [];
+result.m     = [];
 %% ŠÖ”‚Ì•ªU‚ğŠi”[
 result.sigma = [];
 result.Upper = [];
@@ -95,7 +89,6 @@ for i = 1:nsteps
     result.x     = [result.x; x];
     result.y     = [result.y; y];
     result.time  = [result.time; time];
-    result.xEst  = [result.xEst; xEst];
     result.m     = [result.m; m];
     result.sigma = [result.sigma; sigma];
     result.Upper = [result.Upper; Upper];
