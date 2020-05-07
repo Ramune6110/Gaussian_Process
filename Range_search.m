@@ -68,7 +68,6 @@ for i = 1:nsteps
     [m, sigma, Upper, Lower, x, y] = Gaussian_Process(N, K, alpha_f, beta_f, lamda_f, X_t,  X_t_1, x, w, v);
     % ------ リスク鋭敏型フィルタ -------
     [xEst, PPred, m_H] = RiskFikter(N, K, alpha_f, alpha_h, beta_f, beta_h, lamda_f, lamda_h, X_t, X_t_1, Y_t, xEst, PEst, w, v, y, theta);
-    
     % thetaの条件式
     if PPred + m_H^2 / v + theta <= 0
         break;
@@ -143,38 +142,26 @@ function [m, sigma, Upper, Lower, x, y] = Gaussian_Process(N, K, alpha_f, beta_f
     y = sin(x / 10) + sqrt(v) * randn(1, 1);
 end
 
-function [xEst, PPred, m_H] = RiskFikter(N, K, alpha_f, alpha_h, beta_f, beta_h, lamda_f, lamda_h, X_t, X_t_1, Y_t, xEst, PEst, w, v, y, theta)
+function [xEst, PPred, m_H, PEst] = RiskFikter(N, K, alpha_f, alpha_h, beta_f, beta_h, lamda_f, lamda_h, X_t, X_t_1, Y_t, xEst, PEst, w, v, y, theta)
     % ------ リスク鋭敏型フィルタ -------
     %% 予測ステップ
-    % m_fにxEstを入れた値を計算するためにk*(x_t)の計算
-    k_star_xPred = Calc_k_star(N, alpha_f, beta_f, X_t, xEst);
-    % m_fにxEstを入れた値をm_xEstとしている
-    m_xEst = (k_star_xPred)' / (K + lamda_f * eye(N, N)) * X_t_1;
-    xPred  = m_xEst; % 式(16)
-    % ヤコビアンm_Fのためのk*(x_t)の偏微分の計算
-    k_star_mf = Calc_k_star_mf(N, alpha_f, beta_f, X_t, xPred);
-    % ヤコビアンm_F
-    m_F   = (k_star_mf)' / (K + lamda_f * eye(N, N)) * X_t_1; % 式(10)
-    PPred = m_F * PEst * m_F' + w;
+    k_star_xPred = Calc_k_star(N, alpha_f, beta_f, X_t, xEst);        % m_fにxEstを入れた値を計算するためにk*(x_t)の計算
+    m_xEst = (k_star_xPred)' / (K + lamda_f * eye(N, N)) * X_t_1;     % m_fにxEstを入れた値をm_xEstとしている
+    xPred  = m_xEst;                                                  % 式(16)
+    k_star_mf = Calc_k_star_mf(N, alpha_f, beta_f, X_t, xPred);       % ヤコビアンm_Fのためのk*(x_t)の偏微分の計算
+    m_F   = (k_star_mf)' / (K + lamda_f * eye(N, N)) * X_t_1;         % ヤコビアンm_F式(10)
+    PPred = m_F * PEst * m_F' + w;                                    % 事前誤差共分散行列
     %% フィルタリングステップ
-    % ヤコビアンm_Hのためのk*(x_t)の偏微分の計算
-    k_star_mh = Calc_k_star_mf(N, alpha_h, beta_h, X_t, xPred);
-    % ヤコビアンm_H
-    m_H = (k_star_mh)' / (K + lamda_h * eye(N, N)) * Y_t; % 式(12)
-    %カルマンゲイン
-    G = PPred * m_H' / (m_H * PPred * m_H' + v); % 式(18)
-    % 状態推定値
-    % m_hにxPredを入れた値を求めるためにk*(x_t)の計算
-    k_star_xEst = Calc_k_star(N, alpha_h, beta_h, X_t, xPred);
-    % 平均
-    m_h  = (k_star_xEst)' / (K + lamda_h * eye(N, N)) * Y_t;
-    xEst = xPred + G * (y - m_h); % 式(17)
-    % 事後誤差共分散行列
-    % ヤコビアンmfにxPredを入れた値を求めるためにk*(x_t)の偏微分の計算
-    k_star_xEst_last = Calc_k_star_mf(N, alpha_f, beta_f, X_t, xEst);
-    % ヤコビアンmfにxPredを入れた値を計算
-    m_F  = (k_star_xEst_last)' / (K + lamda_f * eye(N, N)) * X_t_1; % 式(10)
-    PEst = m_F^2 / (PPred + m_H^2 / v + theta) + w; % 式(19)
+    k_star_mh = Calc_k_star_mf(N, alpha_h, beta_h, X_t, xPred);       % ヤコビアンm_Hのためのk*(x_t)の偏微分の計算
+    m_H = (k_star_mh)' / (K + lamda_h * eye(N, N)) * Y_t;             % ヤコビアンm_H式(12)
+    G = PPred * m_H' / (m_H * PPred * m_H' + v);                      % カルマンゲイン式(18)
+    %% 状態推定値
+    k_star_xEst = Calc_k_star(N, alpha_h, beta_h, X_t, xPred);        % m_hにxPredを入れた値を求めるためにk*(x_t)の計算
+    m_h  = (k_star_xEst)' / (K + lamda_h * eye(N, N)) * Y_t;          % 平均
+    xEst = xPred + G * (y - m_h);                                     % 式(17)
+    k_star_xEst_last = Calc_k_star_mf(N, alpha_f, beta_f, X_t, xEst); % ヤコビアンmfにxPredを入れた値を求めるためにk*(x_t)の偏微分の計算
+    m_F  = (k_star_xEst_last)' / (K + lamda_f * eye(N, N)) * X_t_1;   % ヤコビアンmfにxPredを入れた値を計算式(10)
+    PEst = m_F^2 / (PPred + m_H^2 / v + theta) + w;                   % 式(19)
 end
 
 function [] = Drow(result)
